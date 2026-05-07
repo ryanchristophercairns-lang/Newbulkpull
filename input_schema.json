@@ -1,0 +1,13 @@
+{
+  "title": "BulkCyberNamePuller",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "names": {
+      "title": "Names (one per line)",
+      "type": "string",
+      "description": "Paste a list of names, one per line."
+    }
+  },
+  "required": ["names"]
+}
