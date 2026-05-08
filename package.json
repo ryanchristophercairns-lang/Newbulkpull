@@ -9,23 +9,7 @@
   "dependencies": {
     "axios": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
-{
-  "name": "bulkcybernamepuller",
-  "version": "1.0.0",
-  "description": "Bulk name lookup actor",
-  "main": "main.js",
-  "scripts": {
-    "start": "node main.js"
-  },
-  "dependencies": {
-    "axios": "^1.6.0",
-    "cheerio": "^1.0.0-rc.12",
     "node-fetch": "^3.3.2",
     "apify": "^3.0.0"
   }
 }
-
->>>>>>> 27ddf4c (Add apify dependency)
-  }
-}
-
