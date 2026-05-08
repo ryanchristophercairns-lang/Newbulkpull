@@ -6,7 +6,8 @@
     "names": {
       "title": "Names (one per line)",
       "type": "string",
-      "description": "Paste a list of names, one per line."
+      "description": "Paste a list of names, one per line.",
+      "editor": "textarea"
     }
   },
   "required": ["names"]
