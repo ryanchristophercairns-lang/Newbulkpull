@@ -1,10 +1,13 @@
 {
-  "name": "bulk-name-phone-extractor",
+  "name": "bulkcybernamepuller",
   "version": "1.0.0",
-  "type": "module",
+  "description": "Bulk name lookup actor",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
   "dependencies": {
-    "apify": "^3.7.1",
-    "cheerio": "^1.2.0",
-    "node-fetch": "^3.3.2"
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12"
   }
-}
+
