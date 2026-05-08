@@ -6,8 +6,9 @@
     "names": {
       "title": "Names (one per line)",
       "type": "string",
-      "description": "Paste a list of names, one per line.",
-      "editor": "textarea"
+      "description": "Paste a list of names, one per line. Example: John Smith\\nJane Doe\\nBob Johnson",
+      "editor": "textarea",
+      "minLength": 1
     }
   },
   "required": ["names"]

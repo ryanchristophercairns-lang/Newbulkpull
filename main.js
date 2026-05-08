@@ -4,13 +4,33 @@ import * as cheerio from 'cheerio';
 
 await Actor.init();
 
-const input = await Actor.getInput();
-const names = (input?.names || "")
+let input;
+try {
+    input = await Actor.getInput();
+} catch (err) {
+    log.error("Failed to get input:", err);
+    await Actor.exit();
+    process.exit(1);
+}
+
+if (!input || !input.names) {
+    log.error("No names provided in input");
+    await Actor.exit();
+    process.exit(1);
+}
+
+const names = input.names
     .split("\n")
     .map(n => n.trim())
     .filter(n => n.length > 0);
 
-log.info("Parsed names:", names);
+if (names.length === 0) {
+    log.error("No valid names found after parsing");
+    await Actor.exit();
+    process.exit(1);
+}
+
+log.info(`Processing ${names.length} names`, { namesCount: names.length });
 
 function splitName(full) {
     if (!full) return { first_name: null, last_name: null };
@@ -50,55 +70,122 @@ async function fetchHTML(url) {
     }
 }
 
-for (const name of names) {
-    const searchUrl = `https://www.cyberbackgroundchecks.com/people?name=${encodeURIComponent(name)}`;
-    log.info(`Searching: ${searchUrl}`);
+let successCount = 0;
+let errorCount = 0;
 
-    const searchHTML = await fetchHTML(searchUrl);
-    const $search = cheerio.load(searchHTML);
+for (let i = 0; i < names.length; i++) {
+    const name = names[i];
+    try {
+        log.info(`[${i + 1}/${names.length}] Processing: ${name}`);
+        
+        const searchUrl = `https://www.cyberbackgroundchecks.com/people?name=${encodeURIComponent(name)}`;
 
-    const firstLink = $search('a[href^="/people/"]').first().attr("href");
+        const searchHTML = await fetchHTML(searchUrl);
+        if (!searchHTML) {
+            log.warning(`Failed to fetch search page for: ${name}`);
+            await Actor.pushData({
+                name,
+                first_name: null,
+                last_name: null,
+                phone_1: null,
+                phone_2: null,
+                phone_3: null,
+                phone_4: null,
+                phone_5: null,
+                error: "Failed to fetch search page",
+            });
+            errorCount++;
+            continue;
+        }
 
-    if (!firstLink) {
-        log.warning(`No profile found for: ${name}`);
-        await Actor.pushData({
-            first_name: null,
-            last_name: null,
-            phone_1: null,
-            phone_2: null,
-            phone_3: null,
-            phone_4: null,
-            phone_5: null,
+        const $search = cheerio.load(searchHTML);
+        const firstLink = $search('a[href^="/people/"]').first().attr("href");
+
+        if (!firstLink) {
+            log.info(`No profile found for: ${name}`);
+            await Actor.pushData({
+                name,
+                first_name: null,
+                last_name: null,
+                phone_1: null,
+                phone_2: null,
+                phone_3: null,
+                phone_4: null,
+                phone_5: null,
+                error: "No profile found",
+            });
+            errorCount++;
+            continue;
+        }
+
+        const profileUrl = `https://www.cyberbackgroundchecks.com${firstLink}`;
+        log.debug(`Profile URL: ${profileUrl}`);
+
+        const profileHTML = await fetchHTML(profileUrl);
+        if (!profileHTML) {
+            log.warning(`Failed to fetch profile for: ${name}`);
+            await Actor.pushData({
+                name,
+                first_name: null,
+                last_name: null,
+                phone_1: null,
+                phone_2: null,
+                phone_3: null,
+                phone_4: null,
+                phone_5: null,
+                error: "Failed to fetch profile",
+            });
+            errorCount++;
+            continue;
+        }
+
+        const $profile = cheerio.load(profileHTML);
+
+        const rawName =
+            $profile("h1").first().text().trim() ||
+            $profile(".person-name").first().text().trim() ||
+            $profile(".person-header-name").first().text().trim() ||
+            name;
+
+        const { first_name, last_name } = splitName(rawName);
+
+        const phones = [];
+        $profile('a[href^="tel:"]').each((i, el) => {
+            const phoneHref = $profile(el).attr("href");
+            if (phoneHref) phones.push(phoneHref);
         });
-        continue;
+
+        const phoneObj = phonesToObject(phones);
+
+        await Actor.pushData({
+            name,
+            first_name,
+            last_name,
+            ...phoneObj,
+        });
+        
+        successCount++;
+        log.info(`Successfully processed: ${name}`);
+    } catch (err) {
+        log.error(`Error processing ${name}:`, err);
+        errorCount++;
+        try {
+            await Actor.pushData({
+                name,
+                first_name: null,
+                last_name: null,
+                phone_1: null,
+                phone_2: null,
+                phone_3: null,
+                phone_4: null,
+                phone_5: null,
+                error: err.message || "Unknown error",
+            });
+        } catch (pushErr) {
+            log.error(`Failed to push error data for ${name}:`, pushErr);
+        }
     }
-
-    const profileUrl = `https://www.cyberbackgroundchecks.com${firstLink}`;
-    log.info(`Profile URL: ${profileUrl}`);
-
-    const profileHTML = await fetchHTML(profileUrl);
-    const $profile = cheerio.load(profileHTML);
-
-    const rawName =
-        $profile("h1").first().text().trim() ||
-        $profile(".person-name").first().text().trim() ||
-        $profile(".person-header-name").first().text().trim() ||
-        name;
-
-    const { first_name, last_name } = splitName(rawName);
-
-    const phones = [];
-    $profile('a[href^="tel:"]').each((i, el) => {
-        phones.push($profile(el).attr("href") || "");
-    });
-
-    const phoneObj = phonesToObject(phones);
-
-    await Actor.pushData({
-        first_name,
-        last_name,
-        ...phoneObj,
-    });
 }
 
+log.info(`Completed! Success: ${successCount}, Errors: ${errorCount}`);
 await Actor.exit();

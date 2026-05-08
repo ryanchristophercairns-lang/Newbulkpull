@@ -1,0 +1,31 @@
+{
+  "actorSpecVersion": 1,
+  "name": "bulk-cyber-name-phone-extractor",
+  "title": "Bulk Cyber Name & Phone Extractor",
+  "description": "Extracts phone numbers from cyberbackgroundchecks.com for a bulk list of names. Searches for each name and scrapes contact information.",
+  "version": "1.0.0",
+  "buildTag": "latest",
+  "env": {},
+  "readme": "./README.md",
+  "input": "./input_schema.json",
+  "dockerfile": "./Dockerfile",
+  "dockerContextUrl": "https://github.com/ryanchristophercairns-lang/Newbulkpull",
+  "gitRepo": "https://github.com/ryanchristophercairns-lang/Newbulkpull",
+  "exampleRunInput": {
+    "names": "John Smith\nJane Doe\nBob Johnson"
+  },
+  "storageTypes": [
+    "dataset",
+    "key-value-store"
+  ],
+  "memSizeGbytes": 1,
+  "timeoutSecs": 300,
+  "isPublic": false,
+  "category": "PRODUCTIVITY",
+  "seoTitle": "Bulk Background Check Extractor | Cyber Background Checks Data Scraper",
+  "seoDescription": "Scrape phone numbers and names from Cyber Background Checks for bulk people search lookups.",
+  "author": {
+    "name": "Ryan Christopher Cairns"
+  },
+  "source": "GITHUB"
+}
