@@ -2,6 +2,7 @@
   "name": "bulkcybernamepuller",
   "version": "1.0.0",
   "description": "Bulk name lookup actor",
+  "type": "module",
   "main": "main.js",
   "scripts": {
     "start": "node main.js"
